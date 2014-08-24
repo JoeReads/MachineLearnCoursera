@@ -1,0 +1,91 @@
+---
+title: "machinelearn 2"
+---
+Machine learning Assignment from Coursera
+output: html_document
+
+## Introduction
+
+This is a study of how measures from sensors in wearable devices can predict activity. 
+
+In this case the question is which predictors will best predict 5 weight lifting situations indicated by letters A through E.
+
+The prediction is concerned with how well a model predicts these situations from a test set which is provided. 
+
+The model will be built using the caret function "train" using random forests. The model will be based on training data which is 60% of the training set provided.
+
+## Exploratory Analysis:
+
+There are 2 data files available from the course assignment page, a training set and a testing set.
+
+These sets were examined in R and Excel. Variables with no values or NA were removed thereby reducing the variables to 52 in each set. These were then read into R for further processing.A factor variable and numeric variable missmatch in training and pmltesting was reconciled
+
+Read in data files from Cousera assignment page after cleaning:
+```{r}
+pmltraining2<-read.csv("pml-training2.csv")
+pmltesting2<-read.csv("pml-testing2.csv")
+#show the dimensions of the data frames
+dim(pmltraining2)
+dim(pmltesting2)
+```
+
+The pmltraining set was divided further into training and testing sets
+using the caret function createDataPartition. These two data frames will be used for cross validation and measurement of out of sample error rate.
+
+```{r}
+library(caret)
+set.seed(123)
+inTrain=createDataPartition(pmltraining2$classe,p=.6[[1]],list=F)
+training=pmltraining2[inTrain,]
+testing=pmltraining2[-inTrain,]
+dim(training)
+dim(testing)
+```
+
+The outcome variable in the pmltraining2 data is called "classe". In the pmltesting2 data there is a varible called "problem_id". The other variable names are the same.
+
+## Developing the machine learning algorithm:
+
+To develop the algorithm I used the train function from the carat package and random forests. Using all the variables, I applied this to the training data.
+
+Train does a Cross validation as part of the process so this will not have to done separately.
+
+trainControl  was also set into the model.
+
+```{r}
+trControlA<-trainControl(method="cv",number=4)
+modelfit<-train(classe~.,data=training, method="rf",prox=TRUE, trControl=trControlA)
+```
+  
+
+## Results:
+
+```{r}
+modelfit
+```
+
+
+
+```{r}
+modelfit$finalModel
+```
+
+This model did very well with an OOB error rate of 0.34%
+
+
+## Predicting on the testing set:
+
+```{r}
+predtest<-predict(modelfit,newdata=testing)
+confusmat<-confusionMatrix(testing$classe,predtest)
+confusmat
+```
+
+
+##Predicting on the pmltesting2 set:
+
+predictpmltest<-predict(modelfit, newdata=pmltesting2)
+
+
+
+
